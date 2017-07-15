@@ -1,3 +1,0 @@
-[submodule "parent"]
-	path = parent
-	url = https://github.com/frickelbruder/packer-clean-ubuntu14.04.git
