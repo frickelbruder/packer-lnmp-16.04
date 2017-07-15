@@ -1,0 +1,129 @@
+{
+    "variables": {
+        "cloud_token": "{{env `VAGRANT_CLOUD_TOKEN`}}",
+        "cloud_repo": "frickelbruder/lnmp-stack-16.04",
+        "version": "0.0.2",
+        "version_description": "init"
+    } ,
+    "provisioners": [
+        {
+            "type": "shell",
+            "scripts": [
+                "parent/base/scripts/base.sh",
+                "parent/base/scripts/virtualbox.sh",
+                "parent/base/scripts/vagrant.sh",
+                "parent/base/scripts/dep.sh",
+                "parent/scripts/provision.sh",
+                "scripts/provision.sh",
+                "parent/base/scripts/cleanup.sh",
+                "parent/base/scripts/zerodisk.sh"
+            ],
+            "override": {
+                "virtualbox-iso": {
+                    "execute_command": "echo 'vagrant'|sudo -S bash '{{.Path}}'"
+                }
+            }
+        },
+        {
+            "type": "shell",
+            "inline": [
+                "sudo chmod a+w /etc/nginx/conf.d/default.conf",
+                "sudo chmod a+w /etc/nginx/modules/",                  
+                "sudo chmod a+w /etc/php/7.0/mods-available/xdebug.ini",
+                "sudo chmod a+w /etc/php/7.0/mods-available" ,
+                "sudo chmod a+w /etc/phpmyadmin/conf.d"
+             ]
+        },
+        {
+          "type": "file",
+          "source": "files/default.conf",  
+          "destination": "/etc/nginx/conf.d/default.conf"
+        },
+        {
+          "type": "file",
+          "source": "files/phpmyadmin.conf",    
+          "destination": "/etc/nginx/modules/phpmyadmin.conf"
+        },
+        {
+          "type": "file",
+          "source": "files/xdebug.ini",
+          "destination": "/etc/php/7.0/mods-available/xdebug.ini"
+        },
+        {
+          "type": "file",
+          "source": "files/everlasting_cookie.php",  
+          "destination": "/etc/phpmyadmin/conf.d/everlasting_cookie.php"
+        },
+        {
+            "type": "shell",
+            "inline": [
+                "sudo chmod a-w /etc/nginx/conf.d/default.conf",
+                "sudo chmod a-w /etc/nginx/modules",
+                 "sudo chmod a-w /etc/php/7.0/mods-available",
+                 "sudo chmod a-w /etc/phpmyadmin/conf.d",
+                "sudo chmod a-w /etc/php/7.0/mods-available/xdebug.ini"
+             ]
+        }
+    ],
+    "builders": [
+        {
+            "type": "virtualbox-iso",
+            "boot_command": [
+                "<enter><wait><f6><esc><bs><bs><bs><bs><bs><bs><bs><bs><bs><bs><bs><bs><bs><bs><bs><bs><bs>",
+                "<bs><bs><bs><bs><bs><bs><bs><bs><bs><bs><bs><bs><bs><bs><bs><bs><bs><bs><bs><bs><bs><bs>",
+                "<bs><bs><bs><bs><bs><bs><bs><bs><bs><bs><bs><bs><bs><bs><bs><bs><bs><bs><bs><bs><bs><bs>",
+                "<bs><bs><bs><bs><bs><bs><bs><bs><bs><bs><bs><bs><bs><bs><bs><bs><bs><bs><bs><bs><bs><bs>",
+                "/install/vmlinuz noapic preseed/url=http://{{ .HTTPIP }}:{{ .HTTPPort }}/preseed.cfg ",
+                "debian-installer=en_US auto locale=en_US kbd-chooser/method=de ",
+                "hostname=complete-stack-16-04 ",
+                "fb=false debconf/frontend=noninteractive ",
+                "keyboard-configuration/modelcode=pc105 keyboard-configuration/layoutcode=de keyboard-configuration/variantcode=nodeadkeys console-setup/ask_detect=false ",
+                "initrd=/install/initrd.gz -- <enter>"
+            ],
+            "vboxmanage": [
+              ["modifyvm", "{{.Name}}", "--vram", "32"],
+              ["modifyvm", "{{.Name}}", "--memory", 2048],
+              ["modifyvm", "{{.Name}}", "--natdnshostresolver1", "on"]
+            ],
+            "headless": true,
+            "output_directory": "vm",
+            "boot_wait": "10s",
+            "disk_size": 20480,
+            "guest_os_type": "Ubuntu_64",
+            "http_directory": "parent/base/http",
+            "iso_checksum": "2bce60d18248df9980612619ff0b34e6",
+            "iso_checksum_type": "md5",
+            "iso_url": "http://de.releases.ubuntu.com/16.04/ubuntu-16.04.2-server-amd64.iso",
+            "ssh_username": "vagrant",
+            "ssh_password": "vagrant",
+            "ssh_port": 22,
+            "ssh_wait_timeout": "10000s",
+            "shutdown_command": "echo '/sbin/halt -h -p' > shutdown.sh; echo 'vagrant'|sudo -S bash 'shutdown.sh'",
+            "guest_additions_path": "VBoxGuestAdditions_{{.Version}}.iso",
+            "virtualbox_version_file": ".vbox_version"
+        }
+    ],
+    "post-processors": [
+      [
+          {
+              "type": "vagrant",
+              "compression_level": 9,
+              "output": "vagrant/clean.{{.Provider}}.box",
+              "keep_input_artifact": false,
+              "vagrantfile_template": "parent/_Vagrantfile"              
+          },
+          {
+              "type": "atlas",
+              "token": "{{user `cloud_token`}}",
+              "artifact": "{{user `cloud_repo`}}",
+              "artifact_type": "vagrant.box",
+              "metadata": {
+                  "provider": "virtualbox",
+                  "created_at": "{{timestamp}}" ,
+                  "version": "{{user `version`}}",
+                  "description":  "{{user `version_description`}}"
+              }
+          }
+      ]
+    ]
+}
