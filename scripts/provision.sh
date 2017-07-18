@@ -91,7 +91,7 @@ debconf-set-selections <<< 'phpmyadmin phpmyadmin/reconfigure-webserver multisel
 debconf-set-selections <<< 'phpmyadmin phpmyadmin/internal/skip-preseed boolean true '
 printf $ECHOWRAPPER "Doing the install"
 sudo apt-get install -y phpmyadmin
-sed -i 's~ //\(.*AllowNoPassword.*\)~\1~1' /etc/phpmyadmin/config.inc.php
+sed -i 's~ //\(.*AllowNoPassword.*\)~\1~g' /etc/phpmyadmin/config.inc.php
 sed -i "s~'cookie';~'config';~1" /etc/phpmyadmin/config.inc.php
 sed -i "s~= \$dbuser;~= 'root';~1" /etc/phpmyadmin/config.inc.php
 sed -i "s~= \$dbpass;~= '';~1" /etc/phpmyadmin/config.inc.php

@@ -2,8 +2,8 @@
     "variables": {
         "cloud_token": "{{env `VAGRANT_CLOUD_TOKEN`}}",
         "cloud_repo": "frickelbruder/lnmp-stack-16.04",
-        "version": "0.0.2",
-        "version_description": "init"
+        "version": "0.0.4",
+        "version_description": "bugfix root login pma"
     } ,
     "provisioners": [
         {
@@ -113,7 +113,7 @@
               "vagrantfile_template": "parent/_Vagrantfile"              
           },
           {
-              "type": "atlas",
+              "type": "vagrant-cloud",
               "token": "{{user `cloud_token`}}",
               "artifact": "{{user `cloud_repo`}}",
               "artifact_type": "vagrant.box",
